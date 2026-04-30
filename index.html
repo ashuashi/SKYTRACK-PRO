@@ -1,0 +1,1082 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SkyTrack Pro — Track Flights Smarter. Travel Better.</title>
+<meta name="description" content="SkyTrack Pro — real-time flight tracking, smart delay predictions, and a multi-flight dashboard. Track any flight in seconds." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+          sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        },
+        colors: {
+          ink: '#0a0a1a',
+          surface: '#141432',
+          surface2: '#1c1c44',
+          line: '#2a2a55',
+          brand: '#4f46e5',
+          brand2: '#7c6dff',
+          mint: '#73ffb8',
+          warn: '#fbbf24',
+          danger: '#ef4444',
+          info: '#60a5fa',
+        },
+        boxShadow: {
+          glow: '0 0 0 1px rgba(124,109,255,.25), 0 20px 60px -20px rgba(79,70,229,.55)',
+          mint: '0 0 0 1px rgba(115,255,184,.25), 0 10px 40px -10px rgba(115,255,184,.45)',
+        },
+        keyframes: {
+          float: { '0%,100%':{transform:'translateY(0)'}, '50%':{transform:'translateY(-6px)'} },
+          shimmer: { '0%':{backgroundPosition:'-200% 0'}, '100%':{backgroundPosition:'200% 0'} },
+          fadein: { '0%':{opacity:0,transform:'translateY(8px)'}, '100%':{opacity:1,transform:'translateY(0)'} },
+          pulseDot: { '0%,100%':{opacity:1,transform:'scale(1)'}, '50%':{opacity:.5,transform:'scale(.85)'} },
+        },
+        animation: {
+          float: 'float 4s ease-in-out infinite',
+          shimmer: 'shimmer 3s linear infinite',
+          fadein: 'fadein .35s ease-out both',
+          pulseDot: 'pulseDot 1.6s ease-in-out infinite',
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html, body { background: #0a0a1a; color: #e6e6f5; font-family: 'DM Sans', system-ui, sans-serif; }
+  html.light, html.light body { background: #f6f7fb; color: #0a0a1a; }
+  .font-display { font-family: 'Space Grotesk', system-ui, sans-serif; letter-spacing: -.01em; }
+
+  /* Aurora background */
+  .aurora {
+    position: absolute; inset: -20% -10% auto -10%; height: 80vh; z-index: 0; pointer-events: none; filter: blur(60px);
+    background:
+      radial-gradient(40% 50% at 20% 30%, rgba(79,70,229,.55), transparent 60%),
+      radial-gradient(35% 45% at 80% 20%, rgba(115,255,184,.25), transparent 60%),
+      radial-gradient(30% 40% at 60% 60%, rgba(124,109,255,.45), transparent 60%);
+  }
+  html.light .aurora {
+    background:
+      radial-gradient(40% 50% at 20% 30%, rgba(79,70,229,.25), transparent 60%),
+      radial-gradient(35% 45% at 80% 20%, rgba(115,255,184,.35), transparent 60%),
+      radial-gradient(30% 40% at 60% 60%, rgba(124,109,255,.20), transparent 60%);
+  }
+
+  /* Glass */
+  .glass {
+    background: linear-gradient(180deg, rgba(28,28,68,.55), rgba(20,20,50,.55));
+    border: 1px solid rgba(124,109,255,.18);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  html.light .glass {
+    background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.7));
+    border: 1px solid rgba(10,10,26,.08);
+  }
+  .glass-strong {
+    background: linear-gradient(180deg, rgba(28,28,68,.85), rgba(20,20,50,.85));
+    border: 1px solid rgba(124,109,255,.25);
+    backdrop-filter: blur(18px);
+  }
+  html.light .glass-strong {
+    background: rgba(255,255,255,.95);
+    border: 1px solid rgba(10,10,26,.08);
+  }
+
+  .ring-grad { background: linear-gradient(135deg,#4f46e5,#7c6dff 40%,#73ffb8); padding:1px; border-radius: 14px; }
+  .ring-grad > * { border-radius: 13px; }
+
+  .shimmer-text {
+    background: linear-gradient(90deg,#7c6dff,#73ffb8,#7c6dff);
+    background-size: 200% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shimmer 4s linear infinite;
+  }
+
+  /* Plane path */
+  .planepath { stroke-dasharray: 6 8; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #2a2a55; border-radius: 8px; }
+  html.light ::-webkit-scrollbar-thumb { background: #d6d8e6; }
+
+  /* Inputs */
+  .input {
+    background: rgba(10,10,26,.5);
+    border: 1px solid rgba(124,109,255,.25);
+    color: inherit;
+  }
+  html.light .input { background: #fff; border-color: rgba(10,10,26,.12); }
+  .input:focus { outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,.35); border-color: #7c6dff; }
+
+  .btn-primary {
+    background: linear-gradient(135deg,#4f46e5,#7c6dff);
+    color: #fff;
+    box-shadow: 0 10px 30px -10px rgba(79,70,229,.7);
+  }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-ghost { border: 1px solid rgba(124,109,255,.3); }
+  html.light .btn-ghost { border-color: rgba(10,10,26,.12); }
+
+  .chip { border:1px solid rgba(124,109,255,.25); background: rgba(124,109,255,.08); }
+  html.light .chip { border-color: rgba(10,10,26,.1); background: rgba(79,70,229,.06); }
+
+  .divider { height:1px; background: linear-gradient(90deg, transparent, rgba(124,109,255,.3), transparent); }
+
+  .muted { color: #9aa0c7; }
+  html.light .muted { color: #5a607f; }
+
+  .grid-faint {
+    background-image:
+      linear-gradient(rgba(124,109,255,.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,109,255,.07) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .status-ontime { color:#73ffb8; background: rgba(115,255,184,.10); border:1px solid rgba(115,255,184,.35); }
+  .status-delayed { color:#ef4444; background: rgba(239,68,68,.10); border:1px solid rgba(239,68,68,.35); }
+  .status-boarding { color:#fbbf24; background: rgba(251,191,36,.10); border:1px solid rgba(251,191,36,.35); }
+  .status-departed { color:#7c6dff; background: rgba(124,109,255,.12); border:1px solid rgba(124,109,255,.35); }
+  .status-landed { color:#60a5fa; background: rgba(96,165,250,.10); border:1px solid rgba(96,165,250,.35); }
+  .status-cancelled { color:#fca5a5; background: rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.25); }
+  .status-scheduled { color:#9aa0c7; background: rgba(154,160,199,.08); border:1px solid rgba(154,160,199,.25); }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 90; padding: 12px 18px; border-radius: 12px;
+    background: rgba(20,20,50,.95); border:1px solid rgba(124,109,255,.35); color:#fff;
+    box-shadow: 0 20px 60px -20px rgba(0,0,0,.6);
+    animation: fadein .25s ease-out;
+  }
+
+  .route-fade { animation: fadein .35s ease-out; }
+
+  /* Timeline */
+  .tl-step .dot { width: 14px; height: 14px; border-radius: 999px; background:#2a2a55; border: 2px solid #2a2a55; transition: all .3s; }
+  .tl-step.done .dot { background:#73ffb8; border-color:#73ffb8; box-shadow: 0 0 0 4px rgba(115,255,184,.18); }
+  .tl-step.active .dot { background:#fbbf24; border-color:#fbbf24; box-shadow: 0 0 0 4px rgba(251,191,36,.22); animation: pulseDot 1.6s ease-in-out infinite; }
+  .tl-bar { height: 3px; background:#2a2a55; border-radius: 999px; overflow:hidden; position:relative; }
+  .tl-bar > i { display:block; height:100%; background: linear-gradient(90deg,#73ffb8,#7c6dff); width:0%; transition: width .6s ease; }
+
+  /* Autocomplete */
+  .ac-item:hover, .ac-item.active { background: rgba(124,109,255,.12); }
+</style>
+</head>
+<body class="min-h-screen relative">
+  <div class="aurora"></div>
+  <div id="app" class="relative z-10"></div>
+  <div id="toast-root"></div>
+
+<script>
+/* =========================================================================
+   SkyTrack Pro — Single-file demo
+   - Hash router
+   - Mock flight + airport data
+   - Simulated real-time updates
+   - localStorage for fake auth + saved flights
+   ========================================================================= */
+
+/* ----------------------------- Mock Data --------------------------------- */
+const AIRLINES = {
+  AI: { name: 'Air India', color: '#e11d48' },
+  EK: { name: 'Emirates', color: '#dc2626' },
+  BA: { name: 'British Airways', color: '#1d4ed8' },
+  UA: { name: 'United', color: '#2563eb' },
+  SQ: { name: 'Singapore Airlines', color: '#f59e0b' },
+  QR: { name: 'Qatar Airways', color: '#7c2d12' },
+  LH: { name: 'Lufthansa', color: '#facc15' },
+  AF: { name: 'Air France', color: '#0ea5e9' },
+  '6E':{ name: 'IndiGo', color: '#1e3a8a' },
+  DL: { name: 'Delta', color: '#b91c1c' },
+  TK: { name: 'Turkish Airlines', color: '#dc2626' },
+  KL: { name: 'KLM', color: '#0284c7' },
+};
+
+const AIRPORTS = [
+  ['DEL','Indira Gandhi Intl','Delhi','India'],
+  ['BOM','Chhatrapati Shivaji','Mumbai','India'],
+  ['BLR','Kempegowda Intl','Bengaluru','India'],
+  ['MAA','Chennai Intl','Chennai','India'],
+  ['HYD','Rajiv Gandhi Intl','Hyderabad','India'],
+  ['CCU','Netaji S.C. Bose','Kolkata','India'],
+  ['DXB','Dubai Intl','Dubai','UAE'],
+  ['AUH','Abu Dhabi Intl','Abu Dhabi','UAE'],
+  ['DOH','Hamad Intl','Doha','Qatar'],
+  ['LHR','Heathrow','London','UK'],
+  ['LGW','Gatwick','London','UK'],
+  ['CDG','Charles de Gaulle','Paris','France'],
+  ['FRA','Frankfurt','Frankfurt','Germany'],
+  ['MUC','Munich','Munich','Germany'],
+  ['AMS','Schiphol','Amsterdam','Netherlands'],
+  ['IST','Istanbul Airport','Istanbul','Turkey'],
+  ['JFK','John F. Kennedy','New York','USA'],
+  ['EWR','Newark Liberty','Newark','USA'],
+  ['ORD','O’Hare Intl','Chicago','USA'],
+  ['LAX','Los Angeles Intl','Los Angeles','USA'],
+  ['SFO','San Francisco Intl','San Francisco','USA'],
+  ['ATL','Hartsfield-Jackson','Atlanta','USA'],
+  ['SIN','Changi','Singapore','Singapore'],
+  ['HKG','Hong Kong Intl','Hong Kong','Hong Kong'],
+  ['NRT','Narita','Tokyo','Japan'],
+  ['HND','Haneda','Tokyo','Japan'],
+  ['ICN','Incheon','Seoul','South Korea'],
+  ['SYD','Kingsford Smith','Sydney','Australia'],
+  ['MEL','Tullamarine','Melbourne','Australia'],
+  ['YYZ','Toronto Pearson','Toronto','Canada'],
+];
+
+const AIRPORT_MAP = Object.fromEntries(AIRPORTS.map(a => [a[0], { code:a[0], name:a[1], city:a[2], country:a[3] }]));
+
+// Statuses: scheduled, boarding, departed, landed, delayed, cancelled
+function mkFlight(no, from, to, schedDep, schedArr, status, opts={}) {
+  const code = no.match(/^[A-Z0-9]{2}/)[0];
+  return {
+    flightNo: no,
+    airline: AIRLINES[code] ? AIRLINES[code].name : 'Unknown',
+    airlineCode: code,
+    from, to,
+    schedDep, schedArr,
+    actualDep: opts.actualDep || schedDep,
+    actualArr: opts.actualArr || schedArr,
+    status,
+    gate: opts.gate || (['A','B','C','D'][Math.floor(Math.random()*4)] + (10+Math.floor(Math.random()*30))),
+    terminal: opts.terminal || String(1 + Math.floor(Math.random()*3)),
+    baggage: opts.baggage || ('B' + (1+Math.floor(Math.random()*8))),
+    aircraft: opts.aircraft || pick(['Boeing 777-300ER','Airbus A320neo','Boeing 787-9','Airbus A350-900','Boeing 737 MAX 8']),
+    delayMin: opts.delayMin || 0,
+    weatherRisk: opts.weatherRisk ?? Math.floor(Math.random()*40),
+    onTimeProb: opts.onTimeProb ?? (60 + Math.floor(Math.random()*39)),
+    note: opts.note || '',
+  };
+}
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+// Generate today-relative timestamps
+const todayBase = (h, m=0, dayOffset=0) => {
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(h, m, 0, 0);
+  return d.toISOString();
+};
+
+const FLIGHTS = {
+  'AI101':  mkFlight('AI101', 'DEL','BOM', todayBase(9,30), todayBase(11,45), 'boarding', { gate:'B12', terminal:'3', delayMin:0, onTimeProb:88, weatherRisk:22 }),
+  'AI202':  mkFlight('AI202', 'BOM','DXB', todayBase(13,15), todayBase(15,5), 'scheduled', { gate:'C04', onTimeProb:92, weatherRisk:10 }),
+  'EK501':  mkFlight('EK501', 'DXB','LHR', todayBase(7,45), todayBase(12,30), 'departed', { actualDep: todayBase(7,52), gate:'A22', onTimeProb:81, weatherRisk:35 }),
+  'EK202':  mkFlight('EK202', 'DXB','JFK', todayBase(8,30), todayBase(14,15), 'delayed', { actualDep: todayBase(9,45), gate:'B08', terminal:'3', delayMin:75, onTimeProb:42, weatherRisk:78, note:'Air-traffic congestion at JFK' }),
+  'BA117':  mkFlight('BA117', 'LHR','JFK', todayBase(10,0), todayBase(13,15), 'departed', { actualDep: todayBase(10,8), gate:'A14', onTimeProb:86, weatherRisk:18 }),
+  'UA901':  mkFlight('UA901', 'SFO','FRA', todayBase(18,20), todayBase(13,40,1), 'scheduled', { gate:'G92', terminal:'3', onTimeProb:79, weatherRisk:30 }),
+  'SQ423':  mkFlight('SQ423', 'SIN','BOM', todayBase(20,5), todayBase(22,55), 'scheduled', { gate:'C18', onTimeProb:94, weatherRisk:12 }),
+  'QR570':  mkFlight('QR570', 'DOH','DEL', todayBase(2,30), todayBase(9,45), 'landed', { actualArr: todayBase(9,38), baggage:'B4', onTimeProb:96, weatherRisk:8 }),
+  'LH760':  mkFlight('LH760', 'FRA','BLR', todayBase(22,15), todayBase(11,40,1), 'boarding', { gate:'Z25', terminal:'1', onTimeProb:84, weatherRisk:20 }),
+  'AF226':  mkFlight('AF226', 'CDG','SFO', todayBase(10,40), todayBase(13,5), 'departed', { actualDep: todayBase(10,55), gate:'K42', onTimeProb:73, weatherRisk:40 }),
+  '6E2134': mkFlight('6E2134','BLR','DEL', todayBase(14,20), todayBase(17,5), 'scheduled', { gate:'D11', onTimeProb:90, weatherRisk:14 }),
+  'DL19':   mkFlight('DL19',  'JFK','LAX', todayBase(15,30), todayBase(18,50), 'scheduled', { gate:'B23', terminal:'4', onTimeProb:82, weatherRisk:22 }),
+  'TK1980': mkFlight('TK1980','IST','LHR', todayBase(11,0), todayBase(13,5), 'cancelled', { note:'Cancelled due to operational reasons', onTimeProb:0, weatherRisk:60 }),
+  'KL875':  mkFlight('KL875', 'AMS','HKG', todayBase(13,45), todayBase(8,30,1), 'departed', { actualDep: todayBase(13,52), gate:'E07', onTimeProb:88, weatherRisk:25 }),
+};
+
+/* ----------------------------- Storage ----------------------------------- */
+const LS = {
+  user: 'skytrack:user',
+  saved: 'skytrack:saved',
+  theme: 'skytrack:theme',
+  mode:  'skytrack:passmode',
+};
+function getUser(){ try { return JSON.parse(localStorage.getItem(LS.user)||'null'); } catch { return null; } }
+function setUser(u){ localStorage.setItem(LS.user, JSON.stringify(u)); }
+function clearUser(){ localStorage.removeItem(LS.user); }
+function getSaved(){ try { return JSON.parse(localStorage.getItem(LS.saved)||'[]'); } catch { return []; } }
+function setSaved(arr){ localStorage.setItem(LS.saved, JSON.stringify(arr)); }
+function getPassMode(){ return localStorage.getItem(LS.mode) || 'traveller'; }
+function setPassMode(m){ localStorage.setItem(LS.mode, m); }
+
+/* ----------------------------- Helpers ----------------------------------- */
+function fmtTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString([], {weekday:'short', day:'numeric', month:'short'});
+}
+function durationBetween(a, b){
+  const ms = new Date(b) - new Date(a);
+  const m = Math.max(0, Math.round(ms/60000));
+  const h = Math.floor(m/60), mm = m%60;
+  return `${h}h ${mm}m`;
+}
+function minutesUntil(iso){
+  return Math.round((new Date(iso) - Date.now())/60000);
+}
+function statusClass(s){
+  return ({
+    'on-time':'status-ontime', 'scheduled':'status-scheduled', 'boarding':'status-boarding',
+    'departed':'status-departed', 'landed':'status-landed', 'delayed':'status-delayed', 'cancelled':'status-cancelled'
+  })[s] || 'status-scheduled';
+}
+function statusLabel(s){
+  return s === 'on-time' ? 'On Time' : s.charAt(0).toUpperCase()+s.slice(1);
+}
+function el(html){ const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]); }
+function toast(msg, kind='info'){
+  const root = document.getElementById('toast-root');
+  const t = el(`<div class="toast"><span class="mr-2">${kind==='error'?'⚠️':kind==='success'?'✅':'ℹ️'}</span>${escapeHtml(msg)}</div>`);
+  root.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .3s'; }, 2200);
+  setTimeout(()=>{ t.remove(); }, 2600);
+}
+
+/* ----------------------------- API layer (swappable) -------------------- */
+// Swap this implementation to call AviationStack later — same Promise contract.
+async function fetchFlight(no){
+  await new Promise(r => setTimeout(r, 120));
+  try {
+    const f = FLIGHTS[no.toUpperCase()];
+    if (!f) throw new Error('not found');
+    // mutate live values slightly
+    return { ...f, _fetchedAt: Date.now() };
+  } catch (e) {
+    toast('Using cached data (offline fallback)', 'info');
+    return null;
+  }
+}
+async function searchFlights({ q, mode }){
+  await new Promise(r => setTimeout(r, 100));
+  const all = Object.values(FLIGHTS);
+  const Q = (q||'').trim().toUpperCase();
+  if (!Q) return all.slice(0, 8);
+  if (mode === 'flight') return all.filter(f => f.flightNo.includes(Q));
+  if (mode === 'route') {
+    const parts = Q.split(/[-→ >]+/).filter(Boolean);
+    if (parts.length >= 2) return all.filter(f => f.from === parts[0] && f.to === parts[1]);
+    return all.filter(f => f.from === Q || f.to === Q);
+  }
+  if (mode === 'airport') return all.filter(f => f.from === Q || f.to === Q);
+  return all.filter(f => f.flightNo.includes(Q) || f.from===Q || f.to===Q);
+}
+
+/* ----------------------------- Simulated live updates -------------------- */
+setInterval(() => {
+  // progress statuses gradually
+  Object.values(FLIGHTS).forEach(f => {
+    if (f.status === 'scheduled' && minutesUntil(f.schedDep) < 45 && minutesUntil(f.schedDep) > 5 && Math.random() < 0.15) {
+      f.status = 'boarding';
+    } else if (f.status === 'boarding' && minutesUntil(f.schedDep) <= 0 && Math.random() < 0.2) {
+      f.status = 'departed';
+      f.actualDep = new Date().toISOString();
+    } else if (f.status === 'departed' && minutesUntil(f.schedArr) <= 0 && Math.random() < 0.2) {
+      f.status = 'landed';
+      f.actualArr = new Date().toISOString();
+    } else if (f.status === 'delayed' && Math.random() < 0.05) {
+      f.delayMin += 5;
+    }
+  });
+  // notify current route to refresh if flight page
+  if (location.hash.startsWith('#/flight/')) renderRoute();
+  if (location.hash.startsWith('#/dashboard')) renderRoute();
+}, 30000);
+
+/* ============================== UI ====================================== */
+
+/* ---- Header ---- */
+function Header(){
+  const u = getUser();
+  return `
+  <header class="sticky top-0 z-40 glass-strong border-b border-line">
+    <div class="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
+      <a href="#/" class="flex items-center gap-2 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand to-brand2 grid place-items-center shadow-glow">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 text-white" fill="currentColor"><path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2 1.5 1.5 0 0 0 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1L15 22v-1.5L13 19v-5.5L21 16z"/></svg>
+        </div>
+        <div class="leading-tight">
+          <div class="font-display font-bold text-lg">SkyTrack <span class="shimmer-text">Pro</span></div>
+          <div class="text-[10px] uppercase tracking-widest muted -mt-0.5">Track smarter</div>
+        </div>
+      </a>
+      <nav class="hidden md:flex items-center gap-1 text-sm">
+        <a href="#/" class="px-3 py-2 rounded-lg hover:bg-white/5">Home</a>
+        <a href="#/search" class="px-3 py-2 rounded-lg hover:bg-white/5">Search</a>
+        <a href="#/dashboard" class="px-3 py-2 rounded-lg hover:bg-white/5">Dashboard</a>
+      </nav>
+      <div class="flex items-center gap-2">
+        <button id="themeToggle" class="btn-ghost rounded-lg w-9 h-9 grid place-items-center" title="Toggle theme">
+          <svg viewBox="0 0 24 24" class="w-4 h-4" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36A5.5 5.5 0 0 1 12 3z"/></svg>
+        </button>
+        ${u ? `
+          <div class="chip rounded-full pl-1 pr-3 py-1 flex items-center gap-2 text-sm">
+            <span class="w-6 h-6 rounded-full bg-gradient-to-br from-brand to-mint grid place-items-center text-[10px] font-bold text-ink">${escapeHtml((u.email||'?')[0].toUpperCase())}</span>
+            <span class="hidden sm:inline">${escapeHtml(u.email)}</span>
+            <button id="logoutBtn" class="muted hover:text-white text-xs ml-1">Sign out</button>
+          </div>` : `
+          <a href="#/login" class="btn-primary rounded-lg px-4 py-2 text-sm font-medium">Sign in</a>
+        `}
+      </div>
+    </div>
+  </header>`;
+}
+function bindHeader(){
+  const tt = document.getElementById('themeToggle');
+  if (tt) tt.onclick = () => {
+    const isLight = document.documentElement.classList.toggle('light');
+    document.documentElement.classList.toggle('dark', !isLight);
+    localStorage.setItem(LS.theme, isLight ? 'light' : 'dark');
+  };
+  const lo = document.getElementById('logoutBtn');
+  if (lo) lo.onclick = (e) => { e.preventDefault(); clearUser(); toast('Signed out', 'success'); renderRoute(); };
+}
+
+/* ---- Footer ---- */
+function Footer(){
+  return `
+  <footer class="mt-20 border-t border-line/60">
+    <div class="max-w-7xl mx-auto px-5 py-10 grid md:grid-cols-3 gap-8 text-sm">
+      <div>
+        <div class="font-display font-bold text-lg">SkyTrack <span class="shimmer-text">Pro</span></div>
+        <p class="muted mt-2">Track flights smarter. Travel better. Demo mode — data is simulated.</p>
+      </div>
+      <div>
+        <div class="font-medium mb-2">Product</div>
+        <div class="muted space-y-1"><div>Real-time tracking</div><div>Smart insights</div><div>Multi-flight dashboard</div></div>
+      </div>
+      <div>
+        <div class="font-medium mb-2">Note</div>
+        <div class="muted">No real flights are tracked. Mock data only. API-ready architecture.</div>
+      </div>
+    </div>
+    <div class="text-center muted text-xs pb-6">© ${new Date().getFullYear()} SkyTrack Pro</div>
+  </footer>`;
+}
+
+/* ---- Search bar with autocomplete ---- */
+function SearchBar({ size='lg', initial='', mode='flight' }={}){
+  return `
+  <div class="ring-grad shadow-glow w-full max-w-3xl mx-auto">
+    <div class="glass-strong rounded-[13px] p-2">
+      <div class="flex items-center gap-1 px-2 pt-1 pb-2 text-xs muted">
+        <button data-mode="flight" class="ac-mode chip rounded-full px-3 py-1 ${mode==='flight'?'!bg-brand !text-white !border-brand':''}">Flight #</button>
+        <button data-mode="route" class="ac-mode chip rounded-full px-3 py-1 ${mode==='route'?'!bg-brand !text-white !border-brand':''}">Route</button>
+        <button data-mode="airport" class="ac-mode chip rounded-full px-3 py-1 ${mode==='airport'?'!bg-brand !text-white !border-brand':''}">Airport</button>
+      </div>
+      <form id="searchForm" class="flex items-center gap-2 relative">
+        <div class="pl-3 pr-1 muted">
+          <svg viewBox="0 0 24 24" class="w-5 h-5" fill="currentColor"><path d="M10 2a8 8 0 1 1-5.3 14.0L2 19l3-2.7A8 8 0 0 1 10 2zm0 2a6 6 0 1 0 0 12A6 6 0 0 0 10 4z"/></svg>
+        </div>
+        <input id="searchInput" autocomplete="off" value="${escapeHtml(initial)}"
+          placeholder="Try AI101, DEL → BOM, or DXB"
+          class="input flex-1 ${size==='lg'?'text-lg':'text-base'} font-medium bg-transparent border-0 focus:!shadow-none px-1 py-3" />
+        <button class="btn-primary rounded-lg px-5 py-3 text-sm font-semibold">Track</button>
+        <div id="acDrop" class="hidden absolute left-0 right-0 top-full mt-2 glass-strong rounded-xl overflow-hidden z-30"></div>
+      </form>
+    </div>
+  </div>`;
+}
+
+function bindSearchBar(container, { mode='flight', onSubmit }={}){
+  let curMode = mode;
+  const input = container.querySelector('#searchInput');
+  const drop = container.querySelector('#acDrop');
+  const form = container.querySelector('#searchForm');
+
+  container.querySelectorAll('.ac-mode').forEach(b => b.onclick = (e) => {
+    e.preventDefault();
+    curMode = b.dataset.mode;
+    container.querySelectorAll('.ac-mode').forEach(x => x.classList.remove('!bg-brand','!text-white','!border-brand'));
+    b.classList.add('!bg-brand','!text-white','!border-brand');
+    input.focus();
+    runAC();
+  });
+
+  function buildSuggestions(q){
+    q = (q||'').trim().toUpperCase();
+    if (curMode === 'flight') {
+      const list = Object.values(FLIGHTS);
+      const pool = q ? list.filter(f => f.flightNo.includes(q)) : list.slice(0,6);
+      return pool.slice(0,6).map(f => ({
+        label: f.flightNo, sub: `${f.airline} · ${f.from} → ${f.to}`,
+        value: f.flightNo, icon: '✈️'
+      }));
+    }
+    if (curMode === 'airport') {
+      const pool = q ? AIRPORTS.filter(a => a[0].includes(q) || a[2].toUpperCase().includes(q) || a[1].toUpperCase().includes(q)) : AIRPORTS.slice(0,6);
+      return pool.slice(0,6).map(a => ({ label: a[0], sub: `${a[1]} · ${a[2]}`, value: a[0], icon: '🛫' }));
+    }
+    if (curMode === 'route') {
+      const pool = q ? AIRPORTS.filter(a => a[0].includes(q) || a[2].toUpperCase().includes(q)) : AIRPORTS.slice(0,6);
+      return pool.slice(0,6).map(a => ({ label: a[0], sub: `${a[2]} — type ${a[0]} → DEST`, value: a[0], icon: '🌐' }));
+    }
+    return [];
+  }
+
+  function runAC(){
+    const items = buildSuggestions(input.value);
+    if (!items.length) { drop.classList.add('hidden'); drop.innerHTML=''; return; }
+    drop.innerHTML = items.map(it => `
+      <button type="button" data-val="${escapeHtml(it.value)}" class="ac-item w-full text-left px-4 py-3 flex items-center gap-3 border-b border-line/40 last:border-0">
+        <span class="w-8 h-8 grid place-items-center rounded-lg bg-white/5">${it.icon}</span>
+        <div class="flex-1">
+          <div class="font-display font-semibold">${escapeHtml(it.label)}</div>
+          <div class="text-xs muted">${escapeHtml(it.sub)}</div>
+        </div>
+        <span class="text-xs muted">↵</span>
+      </button>`).join('');
+    drop.classList.remove('hidden');
+    drop.querySelectorAll('.ac-item').forEach(b => b.onclick = () => {
+      input.value = b.dataset.val;
+      drop.classList.add('hidden');
+      submit();
+    });
+  }
+  input.addEventListener('input', runAC);
+  input.addEventListener('focus', runAC);
+  document.addEventListener('click', (e) => {
+    if (!container.contains(e.target)) drop.classList.add('hidden');
+  });
+
+  function submit(){
+    const v = input.value.trim();
+    if (!v) { toast('Type a flight number, route, or airport'); return; }
+    if (onSubmit) onSubmit({ q: v, mode: curMode });
+    else {
+      // Default behavior: navigate to flight if it matches a known flight number, else to search page
+      const upper = v.toUpperCase().replace(/\s+/g,'');
+      if (FLIGHTS[upper]) location.hash = `#/flight/${upper}`;
+      else location.hash = `#/search?q=${encodeURIComponent(v)}&mode=${curMode}`;
+    }
+  }
+  form.addEventListener('submit', (e) => { e.preventDefault(); submit(); });
+}
+
+/* ---- Status badge ---- */
+function StatusBadge(s){
+  return `<span class="text-xs font-semibold px-2.5 py-1 rounded-full ${statusClass(s)}">${statusLabel(s)}</span>`;
+}
+
+/* ---- Flight Card ---- */
+function FlightCard(f, opts={}){
+  const dep = AIRPORT_MAP[f.from] || { code:f.from, city:f.from };
+  const arr = AIRPORT_MAP[f.to] || { code:f.to, city:f.to };
+  const delay = f.delayMin || (new Date(f.actualDep) - new Date(f.schedDep))/60000;
+  return `
+  <a href="#/flight/${f.flightNo}" class="block glass rounded-2xl p-5 hover:shadow-glow transition route-fade">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand to-brand2 grid place-items-center text-white font-bold text-xs">${escapeHtml(f.airlineCode)}</div>
+        <div>
+          <div class="font-display font-bold text-lg leading-none">${escapeHtml(f.flightNo)}</div>
+          <div class="text-xs muted">${escapeHtml(f.airline)}</div>
+        </div>
+      </div>
+      ${StatusBadge(f.status)}
+    </div>
+    <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+      <div>
+        <div class="font-display text-3xl font-bold">${escapeHtml(dep.code)}</div>
+        <div class="text-xs muted">${escapeHtml(dep.city||'')}</div>
+        <div class="text-sm mt-1">${fmtTime(f.schedDep)}</div>
+      </div>
+      <div class="flex flex-col items-center text-mint">
+        <div class="text-[10px] muted uppercase tracking-widest">${durationBetween(f.schedDep, f.schedArr)}</div>
+        <svg viewBox="0 0 80 20" class="w-24 h-5 my-1">
+          <line x1="2" y1="10" x2="78" y2="10" stroke="currentColor" stroke-opacity=".4" stroke-dasharray="3 4"/>
+          <circle cx="2" cy="10" r="2.5" fill="currentColor"/>
+          <circle cx="78" cy="10" r="2.5" fill="currentColor"/>
+          <path d="M40 5 l8 5 -8 5 2-5z" fill="currentColor"/>
+        </svg>
+        <div class="text-[10px] muted">${escapeHtml(f.aircraft)}</div>
+      </div>
+      <div class="text-right">
+        <div class="font-display text-3xl font-bold">${escapeHtml(arr.code)}</div>
+        <div class="text-xs muted">${escapeHtml(arr.city||'')}</div>
+        <div class="text-sm mt-1">${fmtTime(f.schedArr)}</div>
+      </div>
+    </div>
+    <div class="mt-4 flex items-center justify-between text-xs muted">
+      <div>Gate <span class="text-white/90">${escapeHtml(f.gate)}</span> · Term <span class="text-white/90">${escapeHtml(f.terminal)}</span></div>
+      ${delay > 0 ? `<div class="text-danger font-medium">+${Math.round(delay)} min</div>` : `<div class="text-mint">On schedule</div>`}
+    </div>
+    ${opts.removable ? `<button data-rm="${f.flightNo}" class="rmBtn mt-3 text-xs muted hover:text-danger">Remove from dashboard</button>` : ''}
+  </a>`;
+}
+
+/* ---- Timeline ---- */
+function Timeline(f){
+  const order = ['scheduled','boarding','departed','landed'];
+  const cancelled = f.status === 'cancelled';
+  let activeIdx = order.indexOf(f.status === 'delayed' ? 'scheduled' : f.status);
+  if (activeIdx < 0) activeIdx = 0;
+  const pct = cancelled ? 0 : ((activeIdx) / (order.length-1)) * 100;
+  const labels = ['Scheduled','Boarding','Departed','Landed'];
+  return `
+  <div class="glass rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div class="font-display font-bold">Flight Progress</div>
+      ${cancelled ? `<span class="text-xs status-cancelled px-2 py-1 rounded-full">Cancelled</span>` : ''}
+    </div>
+    <div class="tl-bar mb-4"><i style="width:${pct}%"></i></div>
+    <div class="grid grid-cols-4 gap-2">
+      ${labels.map((l,i) => {
+        const cls = cancelled ? '' : (i < activeIdx ? 'done' : i === activeIdx ? 'active' : '');
+        return `<div class="tl-step ${cls} flex flex-col items-center gap-2 text-center">
+          <div class="dot"></div>
+          <div class="text-xs ${i<=activeIdx?'':'muted'}">${l}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---- Insights Panel ---- */
+function InsightsPanel(f){
+  const items = [];
+  if (f.weatherRisk >= 60) items.push({ icon:'🌧️', t:'High weather risk', s:`Likely turbulence/delay at ${f.to}`, tone:'danger' });
+  else if (f.weatherRisk >= 35) items.push({ icon:'☁️', t:'Moderate weather impact', s:`Minor delay possible at ${f.to}`, tone:'warn' });
+  else items.push({ icon:'☀️', t:'Clear skies', s:'Weather looks favorable', tone:'mint' });
+
+  if (f.status === 'cancelled') items.push({ icon:'❌', t:'Flight cancelled', s: f.note || 'Contact your airline', tone:'danger' });
+  else if (f.delayMin > 30) items.push({ icon:'⏱️', t:`Delayed by ${f.delayMin} min`, s: f.note || 'Air traffic congestion', tone:'danger' });
+  else items.push({ icon:'✅', t:'No reported issues', s:'Operations normal', tone:'mint' });
+
+  items.push({ icon:'📊', t:`On-time probability ${f.onTimeProb}%`, s: `Based on route history & current ops`, tone:'info' });
+
+  const toneCls = { danger:'text-danger', warn:'text-warn', mint:'text-mint', info:'text-info' };
+  return `
+  <div class="glass rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div class="font-display font-bold">Smart Insights</div>
+      <span class="text-[10px] uppercase tracking-widest muted">AI-generated · demo</span>
+    </div>
+    <div class="space-y-3">
+      ${items.map(i => `
+        <div class="flex items-start gap-3 p-3 rounded-xl bg-white/5">
+          <div class="text-xl">${i.icon}</div>
+          <div class="flex-1">
+            <div class="font-medium ${toneCls[i.tone]||''}">${escapeHtml(i.t)}</div>
+            <div class="text-xs muted">${escapeHtml(i.s)}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ---- Countdown / Time to Gate ---- */
+function CountdownPanel(f, mode){
+  const isPickup = mode === 'pickup';
+  const target = isPickup ? f.actualArr : f.schedDep;
+  const mins = minutesUntil(target);
+  let label, sub;
+  if (isPickup) {
+    if (mins > 0) { label = `Lands in ${formatHM(mins)}`; sub = `Recommended airport arrival ${minOffset(target, -15)}`; }
+    else { label = `Landed ${fmtTime(f.actualArr)}`; sub = 'Head to baggage claim ' + f.baggage; }
+  } else {
+    const boardMin = mins - 30;
+    if (mins > 30) { label = `Boards in ${formatHM(boardMin)}`; sub = `Departs ${fmtTime(f.schedDep)} · be at airport by ${minOffset(f.schedDep, -120)}`; }
+    else if (mins > 0) { label = `Departs in ${formatHM(mins)}`; sub = `Boarding now at gate ${f.gate}`; }
+    else { label = `Departed ${fmtTime(f.actualDep)}`; sub = `In flight to ${f.to}`; }
+  }
+  return `
+  <div class="glass rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-2">
+      <div class="font-display font-bold">${isPickup?'Time to Arrival':'Time to Gate'}</div>
+      <div class="text-[10px] uppercase tracking-widest muted">${isPickup?'Pickup mode':'Traveller mode'}</div>
+    </div>
+    <div class="font-display text-3xl md:text-4xl font-bold shimmer-text">${escapeHtml(label)}</div>
+    <div class="text-sm muted mt-2">${escapeHtml(sub)}</div>
+  </div>`;
+}
+function formatHM(m){ if (m < 0) m = 0; const h = Math.floor(m/60), mm = m%60; return h?`${h}h ${mm}m`:`${mm}m`; }
+function minOffset(iso, offsetMin){
+  const d = new Date(new Date(iso).getTime() + offsetMin*60000);
+  return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+/* ============================== Routes =================================== */
+
+function LandingPage(){
+  return `
+  ${Header()}
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 grid-faint opacity-40"></div>
+    <div class="max-w-7xl mx-auto px-5 pt-20 pb-24 relative">
+      <div class="text-center max-w-3xl mx-auto">
+        <div class="chip inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs mb-6">
+          <span class="w-1.5 h-1.5 rounded-full bg-mint animate-pulseDot"></span>
+          Live demo · simulated real-time data
+        </div>
+        <h1 class="font-display text-5xl md:text-7xl font-bold leading-[1.05] tracking-tight">
+          Track <span class="shimmer-text">any flight</span><br/>in seconds.
+        </h1>
+        <p class="muted text-lg md:text-xl mt-5 max-w-2xl mx-auto">
+          SkyTrack Pro gives you live status, smart delay predictions, and a multi-flight dashboard — all in one premium experience.
+        </p>
+      </div>
+      <div class="mt-10" id="heroSearch">${SearchBar({ size:'lg' })}</div>
+      <div class="mt-3 text-center text-xs muted">Try <button class="underline tryBtn" data-q="AI101">AI101</button> · <button class="underline tryBtn" data-q="EK202">EK202</button> · <button class="underline tryBtn" data-q="QR570">QR570</button></div>
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-5 mt-4">
+    <div class="grid md:grid-cols-3 gap-5">
+      ${[
+        ['⚡','Real-time tracking','Status updates every 30 seconds with timeline progress and delay alerts.'],
+        ['🧠','Smart predictions','On-time probability scoring and weather-aware delay insights.'],
+        ['🗂️','Multi-flight dashboard','Track every flight that matters — yours, family, pickup, all in one view.'],
+      ].map(([icon,t,s]) => `
+        <div class="glass rounded-2xl p-6 hover:shadow-glow transition">
+          <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand to-brand2 grid place-items-center text-xl mb-4">${icon}</div>
+          <div class="font-display font-bold text-lg">${t}</div>
+          <p class="muted mt-1 text-sm">${s}</p>
+        </div>`).join('')}
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-5 mt-16">
+    <div class="flex items-end justify-between mb-4">
+      <h2 class="font-display text-2xl md:text-3xl font-bold">Trending flights right now</h2>
+      <a href="#/search" class="text-sm muted hover:text-white">View all →</a>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      ${['AI101','EK202','QR570','LH760','SQ423','BA117'].map(no => FlightCard(FLIGHTS[no])).join('')}
+    </div>
+  </section>
+
+  <section class="max-w-7xl mx-auto px-5 mt-20">
+    <div class="ring-grad shadow-glow">
+      <div class="glass-strong rounded-[13px] p-8 md:p-12 text-center">
+        <h2 class="font-display text-3xl md:text-4xl font-bold">Travel better. Track smarter.</h2>
+        <p class="muted mt-2 max-w-xl mx-auto">Save flights, get countdown alerts, and switch between Traveller & Pickup mode instantly.</p>
+        <div class="mt-6 flex justify-center gap-3">
+          <a href="#/login" class="btn-primary rounded-lg px-5 py-3 text-sm font-semibold">Try the demo</a>
+          <a href="#/dashboard" class="btn-ghost rounded-lg px-5 py-3 text-sm font-semibold">Open dashboard</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  ${Footer()}`;
+}
+function bindLanding(){
+  bindHeader();
+  const hs = document.getElementById('heroSearch');
+  bindSearchBar(hs);
+  document.querySelectorAll('.tryBtn').forEach(b => b.onclick = () => { location.hash = `#/flight/${b.dataset.q}`; });
+}
+
+function LoginPage(){
+  return `
+  ${Header()}
+  <section class="max-w-md mx-auto px-5 py-16 route-fade">
+    <div class="ring-grad shadow-glow">
+      <div class="glass-strong rounded-[13px] p-8">
+        <div class="font-display text-2xl font-bold">Sign in to SkyTrack Pro</div>
+        <p class="muted text-sm mt-1">Demo mode — no real account is created. Anything works.</p>
+        <form id="loginForm" class="mt-6 space-y-3">
+          <label class="block text-xs muted">Email</label>
+          <input id="email" type="email" required class="input w-full rounded-lg px-4 py-3" placeholder="you@example.com" />
+          <label class="block text-xs muted mt-2">Password</label>
+          <input id="password" type="password" required class="input w-full rounded-lg px-4 py-3" placeholder="••••••••" />
+          <button class="btn-primary rounded-lg w-full py-3 font-semibold mt-2">Continue</button>
+        </form>
+        <div class="text-center text-xs muted mt-4">By continuing you accept our pretend Terms & Privacy.</div>
+      </div>
+    </div>
+  </section>
+  ${Footer()}`;
+}
+function bindLogin(){
+  bindHeader();
+  document.getElementById('loginForm').onsubmit = (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const pw = document.getElementById('password').value;
+    if (!email || !pw) return toast('Enter email and password', 'error');
+    setUser({ email, signedInAt: Date.now() });
+    toast('Welcome to SkyTrack Pro', 'success');
+    location.hash = '#/dashboard';
+  };
+}
+
+function SearchPage(params){
+  const q = params.get('q') || '';
+  const mode = params.get('mode') || 'flight';
+  return `
+  ${Header()}
+  <section class="max-w-7xl mx-auto px-5 pt-12 route-fade">
+    <h1 class="font-display text-3xl md:text-4xl font-bold">Search flights</h1>
+    <p class="muted mt-1">By flight number, route, or airport.</p>
+    <div class="mt-6" id="searchTop">${SearchBar({ size:'lg', initial:q, mode })}</div>
+    <div id="results" class="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </section>
+  ${Footer()}`;
+}
+function bindSearch(params){
+  bindHeader();
+  const top = document.getElementById('searchTop');
+  const results = document.getElementById('results');
+  let mode = params.get('mode') || 'flight';
+
+  bindSearchBar(top, { mode, onSubmit: ({ q, mode: m }) => {
+    mode = m;
+    location.hash = `#/search?q=${encodeURIComponent(q)}&mode=${m}`;
+  }});
+
+  async function run(){
+    const q = params.get('q') || '';
+    const m = params.get('mode') || 'flight';
+    const list = await searchFlights({ q, mode: m });
+    if (!list.length) {
+      results.innerHTML = `<div class="col-span-full glass rounded-2xl p-10 text-center">
+        <div class="text-3xl mb-2">🛬</div>
+        <div class="font-display text-lg font-semibold">No flights found</div>
+        <div class="muted text-sm">Try a different code, e.g. AI101 or DEL</div>
+      </div>`;
+    } else {
+      results.innerHTML = list.map(f => FlightCard(f)).join('');
+    }
+  }
+  run();
+}
+
+function FlightPage(flightNo){
+  return `
+  ${Header()}
+  <section class="max-w-6xl mx-auto px-5 pt-10 route-fade" id="flightWrap"><div class="muted">Loading ${escapeHtml(flightNo)}…</div></section>
+  ${Footer()}`;
+}
+async function bindFlight(flightNo){
+  bindHeader();
+  const wrap = document.getElementById('flightWrap');
+  const f = await fetchFlight(flightNo);
+  if (!f) {
+    wrap.innerHTML = `<div class="glass rounded-2xl p-10 text-center">
+      <div class="text-3xl mb-2">🤷</div>
+      <div class="font-display text-lg font-semibold">Flight ${escapeHtml(flightNo)} not found</div>
+      <a href="#/search" class="btn-primary rounded-lg px-4 py-2 text-sm inline-block mt-4">Back to search</a>
+    </div>`;
+    return;
+  }
+  const dep = AIRPORT_MAP[f.from], arr = AIRPORT_MAP[f.to];
+  const saved = getSaved().includes(f.flightNo);
+  const mode = getPassMode();
+  const delay = f.delayMin || Math.max(0, Math.round((new Date(f.actualDep) - new Date(f.schedDep))/60000));
+
+  wrap.innerHTML = `
+    <div class="flex items-center gap-2 text-sm mb-4">
+      <a href="#/search" class="muted hover:text-white">← Search</a>
+    </div>
+    <div class="ring-grad shadow-glow">
+      <div class="glass-strong rounded-[13px] p-6 md:p-8">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-brand2 grid place-items-center text-white font-display font-bold text-lg">${escapeHtml(f.airlineCode)}</div>
+            <div>
+              <div class="font-display text-3xl md:text-4xl font-bold">${escapeHtml(f.flightNo)}</div>
+              <div class="muted text-sm">${escapeHtml(f.airline)} · ${escapeHtml(f.aircraft)}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            ${StatusBadge(f.status)}
+            <button id="saveBtn" class="btn-ghost rounded-lg px-3 py-2 text-sm flex items-center gap-2">
+              <span>${saved?'★':'☆'}</span><span>${saved?'Saved':'Save flight'}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-8 grid md:grid-cols-[1fr_auto_1fr] items-center gap-6">
+          <div>
+            <div class="font-display text-5xl md:text-6xl font-bold">${escapeHtml(dep.code)}</div>
+            <div class="muted">${escapeHtml(dep.name)} · ${escapeHtml(dep.city)}</div>
+            <div class="mt-3 text-sm">
+              <div class="flex items-center gap-3">
+                <span class="muted w-16">Sched</span><span class="font-display text-xl">${fmtTime(f.schedDep)}</span>
+              </div>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="muted w-16">Actual</span>
+                <span class="font-display text-xl ${delay>0?'text-danger':'text-mint'}">${fmtTime(f.actualDep)}</span>
+                ${delay>0?`<span class="text-xs status-delayed px-2 py-0.5 rounded-full">+${delay} min</span>`:''}
+              </div>
+              <div class="muted text-xs mt-1">${fmtDate(f.schedDep)}</div>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-center text-mint">
+            <div class="text-xs muted uppercase tracking-widest">${durationBetween(f.schedDep, f.schedArr)}</div>
+            <svg viewBox="0 0 220 60" class="w-56 h-14 my-2">
+              <path d="M10 45 Q 110 -10, 210 45" stroke="currentColor" stroke-opacity=".5" fill="none" class="planepath"/>
+              <circle cx="10" cy="45" r="4" fill="currentColor"/>
+              <circle cx="210" cy="45" r="4" fill="currentColor"/>
+              <g transform="translate(110,15) rotate(15)"><path d="M-10 0 L10 0 L8 -3 L-8 -3 z M0 0 L0 8" fill="currentColor"/></g>
+            </svg>
+            <div class="text-[11px] muted">Direct</div>
+          </div>
+
+          <div class="text-right">
+            <div class="font-display text-5xl md:text-6xl font-bold">${escapeHtml(arr.code)}</div>
+            <div class="muted">${escapeHtml(arr.name)} · ${escapeHtml(arr.city)}</div>
+            <div class="mt-3 text-sm">
+              <div class="flex items-center gap-3 justify-end">
+                <span class="font-display text-xl">${fmtTime(f.schedArr)}</span><span class="muted w-16 text-left">Sched</span>
+              </div>
+              <div class="flex items-center gap-3 justify-end mt-1">
+                <span class="font-display text-xl ${delay>0?'text-danger':'text-mint'}">${fmtTime(f.actualArr)}</span>
+                <span class="muted w-16 text-left">Actual</span>
+              </div>
+              <div class="muted text-xs mt-1">${fmtDate(f.schedArr)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
+          ${[
+            ['Gate', f.gate, '🚪'],
+            ['Terminal', f.terminal, '🏢'],
+            ['Baggage', f.baggage, '🧳'],
+            ['Status', statusLabel(f.status), '📡'],
+          ].map(([k,v,i]) => `
+            <div class="glass rounded-xl p-4">
+              <div class="text-xs muted">${i} ${k}</div>
+              <div class="font-display text-2xl font-bold mt-1">${escapeHtml(v)}</div>
+            </div>`).join('')}
+        </div>
+
+        <div class="mt-4 flex items-center justify-between text-xs muted">
+          <div class="flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-mint animate-pulseDot"></span>
+            Last updated <span id="lu">just now</span> · auto-refresh 30s
+          </div>
+          <div class="flex items-center gap-1 chip rounded-full p-1">
+            <button data-mode="traveller" class="modeBtn px-3 py-1 rounded-full text-xs ${mode==='traveller'?'!bg-brand !text-white':''}">Traveller</button>
+            <button data-mode="pickup" class="modeBtn px-3 py-1 rounded-full text-xs ${mode==='pickup'?'!bg-brand !text-white':''}">Pickup</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 grid lg:grid-cols-2 gap-5">
+      ${Timeline(f)}
+      ${CountdownPanel(f, mode)}
+    </div>
+    <div class="mt-5">
+      ${InsightsPanel(f)}
+    </div>
+
+    ${f.note ? `<div class="mt-5 glass rounded-2xl p-4 text-sm"><span class="text-warn">Note:</span> ${escapeHtml(f.note)}</div>`:''}
+  `;
+
+  // last-updated ticker
+  let secs = 0;
+  const lu = document.getElementById('lu');
+  const ticker = setInterval(() => {
+    secs++;
+    if (!document.body.contains(lu)) return clearInterval(ticker);
+    lu.textContent = secs < 60 ? `${secs}s ago` : `${Math.floor(secs/60)}m ago`;
+  }, 1000);
+
+  // Save toggle
+  document.getElementById('saveBtn').onclick = () => {
+    const list = getSaved();
+    const i = list.indexOf(f.flightNo);
+    if (i >= 0) { list.splice(i,1); setSaved(list); toast('Removed from dashboard', 'info'); }
+    else { list.push(f.flightNo); setSaved(list); toast('Saved to dashboard', 'success'); }
+    bindFlight(flightNo);
+  };
+
+  // Mode toggle
+  document.querySelectorAll('.modeBtn').forEach(b => b.onclick = () => {
+    setPassMode(b.dataset.mode);
+    bindFlight(flightNo);
+  });
+}
+
+function DashboardPage(){
+  return `
+  ${Header()}
+  <section class="max-w-7xl mx-auto px-5 pt-10 route-fade">
+    <div class="flex items-end justify-between flex-wrap gap-3">
+      <div>
+        <h1 class="font-display text-3xl md:text-4xl font-bold">Your dashboard</h1>
+        <p class="muted mt-1">Saved flights — auto-refreshing every 30 seconds.</p>
+      </div>
+      <a href="#/search" class="btn-primary rounded-lg px-4 py-2 text-sm font-semibold">+ Track a flight</a>
+    </div>
+    <div id="dash" class="mt-8 grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </section>
+  ${Footer()}`;
+}
+function bindDashboard(){
+  bindHeader();
+  const dash = document.getElementById('dash');
+  const ids = getSaved();
+  if (!ids.length) {
+    dash.innerHTML = `<div class="col-span-full glass rounded-2xl p-12 text-center">
+      <div class="text-4xl mb-3">📭</div>
+      <div class="font-display text-xl font-semibold">No saved flights yet</div>
+      <p class="muted mt-1 text-sm">Search a flight and tap “Save flight” to add it here.</p>
+      <a href="#/search" class="btn-primary rounded-lg px-4 py-2 text-sm inline-block mt-5">Search flights</a>
+    </div>`;
+    return;
+  }
+  dash.innerHTML = ids.map(id => {
+    const f = FLIGHTS[id];
+    return f ? FlightCard(f, { removable:true }) : '';
+  }).join('');
+  dash.querySelectorAll('.rmBtn').forEach(b => b.onclick = (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const id = b.dataset.rm;
+    const list = getSaved().filter(x => x !== id);
+    setSaved(list);
+    toast('Removed', 'info');
+    bindDashboard();
+  });
+}
+
+/* ============================== Router =================================== */
+
+function parseHash(){
+  const raw = location.hash.replace(/^#/, '') || '/';
+  const [path, qs=''] = raw.split('?');
+  return { path, params: new URLSearchParams(qs) };
+}
+function renderRoute(){
+  const { path, params } = parseHash();
+  const app = document.getElementById('app');
+  let html = '';
+  let onMount = () => {};
+  if (path === '/' || path === '') { html = LandingPage(); onMount = bindLanding; }
+  else if (path === '/login') { html = LoginPage(); onMount = bindLogin; }
+  else if (path === '/search') { html = SearchPage(params); onMount = () => bindSearch(params); }
+  else if (path.startsWith('/flight/')) {
+    const no = decodeURIComponent(path.split('/')[2] || '').toUpperCase();
+    html = FlightPage(no); onMount = () => bindFlight(no);
+  }
+  else if (path === '/dashboard') { html = DashboardPage(); onMount = bindDashboard; }
+  else { html = `${Header()}<section class="max-w-2xl mx-auto px-5 py-24 text-center route-fade">
+    <div class="font-display text-6xl font-bold">404</div>
+    <p class="muted mt-2">Page not found.</p>
+    <a href="#/" class="btn-primary rounded-lg px-4 py-2 text-sm inline-block mt-6">Go home</a></section>${Footer()}`; onMount = bindHeader; }
+  app.innerHTML = html;
+  window.scrollTo({ top:0, behavior:'instant' });
+  onMount();
+}
+
+/* ============================== Boot ===================================== */
+(function init(){
+  // theme
+  const t = localStorage.getItem(LS.theme);
+  if (t === 'light') { document.documentElement.classList.add('light'); document.documentElement.classList.remove('dark'); }
+  window.addEventListener('hashchange', renderRoute);
+  renderRoute();
+})();
+</script>
+</body>
+</html>
